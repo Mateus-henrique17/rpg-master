@@ -1,28 +1,45 @@
 import { GoogleGenAI } from "@google/genai";
 import { SYSTEM_INSTRUCTION } from "../config/rpgconfig.js";
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+if (!apiKey) {
+  console.error("VITE_GEMINI_API_KEY não foi definida.");
+}
+
+const ai = new GoogleGenAI({ apiKey });
 
 const MODEL_NAME = "gemini-2.5-flash";
 
 // Inicia o Mestre trazendo o primeiro cenário do RPG
 export const start_RPG_master = async () => {
   try {
+    if (!apiKey) {
+      throw new Error("A chave da API do Gemini não está configurada.");
+    }
+
     const response = await ai.models.generateContent({
-      model: MODEL_NAME, 
+      model: MODEL_NAME,
       contents: [
-        { parts: [{ text: "Start the game and describe the initial scenario." }] }
+        {
+          parts: [
+            { text: "Start the game and describe the initial scenario." },
+          ],
+        },
       ],
       config: {
-        systemInstruction: SYSTEM_INSTRUCTION, 
-        temperature: 0.7 
-      }
+        systemInstruction: SYSTEM_INSTRUCTION,
+        temperature: 0.7,
+      },
     });
 
     // Garante a extração correta do texto se a propriedade direta falhar
-    const textOutput = response.text || response.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!textOutput) throw new Error("A API respondeu, mas o formato do texto veio inválido.");
-    return textOutput; 
+    const textOutput =
+      response.text || response.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!textOutput)
+      throw new Error("A API respondeu, mas o formato do texto veio inválido.");
+    return textOutput;
   } catch (error) {
     console.error("Erro ao iniciar o RPG Master:", error);
     throw error;
@@ -31,33 +48,57 @@ export const start_RPG_master = async () => {
 
 export const send_player_choice = async (history, message) => {
   try {
-    const formattedHistory = history.map(msg => ({
-      role: msg.role === 'model' || msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.text || msg.parts?.[0]?.text || "" }]
-    }));
+    if (!apiKey) {
+      throw new Error("A chave da API do Gemini não está configurada.");
+    }
+
+    const formattedHistory = history.map((msg) => {
+      const textFromParts =
+        typeof msg.parts?.text === "string"
+          ? msg.parts.text
+          : typeof msg.parts?.[0]?.text === "string"
+            ? msg.parts[0].text
+            : typeof msg.text === "string"
+              ? msg.text
+              : "";
+
+      return {
+        role:
+          msg.role === "model" || msg.role === "assistant" ? "model" : "user",
+        parts: [{ text: textFromParts }],
+      };
+    });
 
     const chat = ai.chats.create({
       model: MODEL_NAME,
       history: formattedHistory,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.7
-      }
+        temperature: 0.7,
+      },
     });
 
-    //Envia a string/objeto correto para o sendMessage
+    const prompt =
+      typeof message === "string" ? message : String(message ?? "");
+
     const response = await chat.sendMessage({
-      message: [{ parts: [{ text: message }] }]
+      message: prompt,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        temperature: 0.7,
+      },
     });
-    
-    // Mesma extração segura para o fluxo de conversas
-    const textOutput = response.text || response.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!textOutput) throw new Error("A API respondeu o jogador, mas o texto veio vazio.");
+
+    const textOutput =
+      response.text || response.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!textOutput) {
+      throw new Error("A API respondeu o jogador, mas o texto veio vazio.");
+    }
+
     return textOutput;
   } catch (error) {
     console.error("Erro ao enviar jogada:", error);
     throw error;
   }
 };
-
