@@ -38,6 +38,7 @@ export function useRpgGame() {
   const [userMessage, setUserMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
+  const [retryAfterSeconds, setRetryAfterSeconds] = useState(0);
   const requestInProgress = useRef(false);
   const pendingAction = useRef(null);
 
@@ -53,6 +54,15 @@ export function useRpgGame() {
     }
   }, [history]);
 
+  useEffect(() => {
+    if (retryAfterSeconds <= 0) return undefined;
+
+    const countdownTimer = window.setTimeout(() => {
+      setRetryAfterSeconds((remaining) => Math.max(0, remaining - 1));
+    }, 1000);
+    return () => window.clearTimeout(countdownTimer);
+  }, [retryAfterSeconds]);
+
   const initializeGame = useCallback(async () => {
     if (requestInProgress.current) return;
 
@@ -60,12 +70,14 @@ export function useRpgGame() {
     requestInProgress.current = true;
     setIsLoading(true);
     setApiError(null);
+    setRetryAfterSeconds(0);
     try {
       const openingScene = await startGame();
       setHistory([{ role: "assistant", content: openingScene }]);
     } catch (error) {
       console.error("Erro ao iniciar o jogo:", error);
       setApiError(error.message || "Não foi possível iniciar a aventura.");
+      setRetryAfterSeconds(error.retryAfterSeconds || 0);
     } finally {
       requestInProgress.current = false;
       setIsLoading(false);
@@ -88,6 +100,7 @@ export function useRpgGame() {
     setUserMessage("");
     setIsLoading(true);
     setApiError(null);
+    setRetryAfterSeconds(0);
 
     const updatedHistory = [...history, { role: "user", content: action }];
     setHistory(updatedHistory);
@@ -104,6 +117,7 @@ export function useRpgGame() {
       setHistory(history);
       setUserMessage(action);
       setApiError(error.message || "Não foi possível enviar sua ação.");
+      setRetryAfterSeconds(error.retryAfterSeconds || 0);
     } finally {
       requestInProgress.current = false;
       setIsLoading(false);
@@ -125,6 +139,7 @@ export function useRpgGame() {
     setHistory([]);
     setUserMessage("");
     setApiError(null);
+    setRetryAfterSeconds(0);
   };
 
   return {
@@ -133,6 +148,7 @@ export function useRpgGame() {
     setUserMessage,
     isLoading,
     apiError,
+    retryAfterSeconds,
     initializeGame,
     handleFormSubmit,
     retryLastAction,

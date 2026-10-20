@@ -21,16 +21,18 @@ O grande diferencial técnico é a conveniência: a aplicação salva cada passo
 - **LocalStorage** — Sistema de salvamento automático em segundo plano.
 - **Persistência automática**: Sem botões de "Salvar". O progresso é registrado a cada nova escolha feita.
 
-## ⚙️ Configuração local
+## ⚙️ Configuração e deploy no GitHub Pages
 
 1. Crie uma chave de API no [console da Groq](https://console.groq.com/keys).
-2. Copie `.env.example` para `.env` e preencha `VITE_GROQ_API_KEY`.
-3. Opcionalmente, altere `VITE_GROQ_MODEL` para um modelo disponível e habilitado na sua conta Groq. O padrão é `openai/gpt-oss-120b`.
+2. Copie `.env.example` para `.env` e configure `VITE_GROQ_API_KEY` com uma chave nova. Não reutilize uma chave que já tenha sido compartilhada.
+3. Opcionalmente, altere `VITE_GROQ_MODEL` para um modelo disponível na sua conta. O padrão é `openai/gpt-oss-120b`.
 4. Instale as dependências com `npm install` e inicie com `npm run dev`.
 
-Se a API retornar `404` informando que o modelo não existe ou que a conta não tem acesso, confira se o ID de `VITE_GROQ_MODEL` está ativo na página Models do Groq Console e reinicie o Vite depois de editar `.env`.
+Para publicar no GitHub Pages usando `npm run deploy`, a variável `VITE_GROQ_API_KEY` precisa estar configurada antes do build. O valor é incorporado ao JavaScript que será público.
 
-**Segurança:** esta aplicação é estática e chama a Groq diretamente do navegador. Variáveis `VITE_*` e a chave configurada ficam visíveis para quem acessar o site. Use a chamada direta apenas para desenvolvimento/testes com uma chave restrita; para publicar, mova a chamada para um backend ou função serverless e mantenha a chave no servidor. GitHub Pages, sozinho, não consegue ocultar essa chave.
+**Limitação importante:** este app estático chama a Groq diretamente do navegador. Não há rate limit por IP controlado pelo app e não é possível esconder a chave de quem acessar o site. A Groq ainda aplica suas próprias cotas/limites à chave, e a interface exibe o tempo de espera quando a resposta informa um limite; isso não substitui proteção de backend. Use uma chave dedicada, com limites de gasto/uso quando disponíveis, monitore-a e revogue-a se for exposta. Não use esta configuração para uma chave com acesso sensível.
+
+Se a chave já foi incluída em um build publicado, revogue-a e gere outra. Se o modelo não existir ou a conta não tiver acesso, confira o ID de `VITE_GROQ_MODEL`, depois reinicie o Vite e gere um novo deploy.
 
 ---
 

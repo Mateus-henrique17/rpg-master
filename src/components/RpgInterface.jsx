@@ -9,6 +9,7 @@ export default function RpgInterface() {
     setUserMessage,
     isLoading,
     apiError,
+    retryAfterSeconds,
     handleFormSubmit,
     retryLastAction,
     sendPlayerAction,
@@ -110,9 +111,14 @@ export default function RpgInterface() {
           <button
             type="button"
             onClick={retryLastAction}
+            disabled={isLoading || retryAfterSeconds > 0}
             className="retry-button"
           >
-            {history.length === 0 ? "Invocar o Mestre" : "Tentar novamente"}
+            {retryAfterSeconds > 0
+              ? `Tente novamente em ${retryAfterSeconds}s`
+              : history.length === 0
+                ? "Invocar o Mestre"
+                : "Tentar novamente"}
           </button>
         </div>
       )}
