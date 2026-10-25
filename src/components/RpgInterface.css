@@ -160,6 +160,12 @@
   border-top-right-radius: 0;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .chat-log {
+    scroll-behavior: auto;
+  }
+}
+
 /* --- BARRA DE FERRAMENTAS SUPERIOR (TOOLBAR) --- */
 .rpg-toolbar {
   display: flex;

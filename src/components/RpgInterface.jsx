@@ -16,20 +16,22 @@ export default function RpgInterface() {
     resetGame,
   } = useRpgGame();
 
-  const bottomRef = useRef(null);
+  const narrativeStartRef = useRef(null);
+  const lastMessage = history[history.length - 1];
+  const isMasterTurn = lastMessage?.role === "assistant";
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({
+    if (!isMasterTurn) return;
+
+    narrativeStartRef.current?.scrollIntoView({
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
         ? "auto"
         : "smooth",
-      block: "end",
+      block: "start",
     });
-  }, [history]);
+  }, [history, isMasterTurn]);
 
   // Determina se o mestre respondeu e extrai as opções disponíveis.
-  const lastMessage = history[history.length - 1];
-  const isMasterTurn = lastMessage?.role === "assistant";
   const masterText = isMasterTurn ? lastMessage.content : "";
 
   const parseOptions = (text) => {
@@ -76,6 +78,7 @@ export default function RpgInterface() {
           return (
             <div
               key={index}
+              ref={isMaster && chat === lastMessage ? narrativeStartRef : null}
               className={`message-wrapper ${isMaster ? "master-turn" : "player-turn"}`}
             >
               <span className="character-label">
@@ -100,8 +103,6 @@ export default function RpgInterface() {
             </div>
           </div>
         )}
-
-        <div ref={bottomRef} aria-hidden="true" />
       </div>
 
       {/* ERROR CONTAINER */}

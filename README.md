@@ -1,41 +1,69 @@
 # ⚔️ RPG Master
 
-Um jogo de RPG medieval feito para navegadores, onde a Inteligência Artificial narra a história e você toma as decisões. O projeto foca em uma interface imersiva desenvolvida puramente com React e CSS, sem frameworks visuais.
+Uma aventura medieval interativa para navegador. A inteligência artificial assume o papel de Mestre, descreve cada cena e oferece possibilidades; você decide como seu personagem reage.
 
-🔗 **[Clique aqui para jogar](https://mateus-henrique17.github.io/rpg-master)**
+**[Jogue RPG Master](https://mateus-henrique17.github.io/rpg-master)**
 
----
+## Como jogar
 
-## 🕹️ O Jogo
+1. Aguarde o Mestre apresentar a cena e as opções disponíveis.
+2. Escolha uma das ações sugeridas ou escreva uma ação própria.
+3. Acompanhe a consequência e continue a aventura. O progresso é salvo automaticamente neste navegador.
 
-Em **RPG Master**, você entra em um universo clássico de fantasia medieval. A cada turno, a API da Groq gera um cenário e apresenta opções fechadas de ação.
+Use **Novo jogo** para apagar o histórico salvo e começar outra aventura. O salvamento usa o `localStorage` do navegador; limpar os dados do site também remove o progresso.
 
-O grande diferencial técnico é a conveniência: a aplicação salva cada passo seu em tempo real. Se você fechar a aba no meio de uma masmorra, basta reabrir a página para continuar exatamente de onde parou.
+## Recursos
 
----
+- Narrativas e respostas geradas pela API da Groq.
+- Opções de ação rápida e campo para ações personalizadas.
+- Histórico persistido localmente para retomar a aventura.
+- Interface responsiva, com indicador de carregamento, tratamento de erros e espera após limite de requisições.
 
-## 🛠️ Tecnologias e Recursos
+## Tecnologias
 
-- **React.js** — Estrutura e gerenciamento de estado dos turnos.
-- **Groq API** — Motor narrativo acessado pelo endpoint compatível com chat completions.
-- **LocalStorage** — Sistema de salvamento automático em segundo plano.
-- **Persistência automática**: Sem botões de "Salvar". O progresso é registrado a cada nova escolha feita.
+- [React](https://react.dev/) 19
+- [Vite](https://vite.dev/) 8
+- [Groq API](https://console.groq.com/docs/quickstart)
+- CSS, sem framework visual
 
-## ⚙️ Configuração e deploy no GitHub Pages
+## Desenvolvimento local
 
-1. Crie uma chave de API no [console da Groq](https://console.groq.com/keys).
-2. Copie `.env.example` para `.env` e configure `VITE_GROQ_API_KEY` com uma chave nova. Não reutilize uma chave que já tenha sido compartilhada.
-3. Opcionalmente, altere `VITE_GROQ_MODEL` para um modelo disponível na sua conta. O padrão é `openai/gpt-oss-120b`.
-4. Instale as dependências com `npm install` e inicie com `npm run dev`.
+Requisitos: Node.js e npm.
 
-Para publicar no GitHub Pages usando `npm run deploy`, a variável `VITE_GROQ_API_KEY` precisa estar configurada antes do build. O valor é incorporado ao JavaScript que será público.
+1. Crie uma chave no [console da Groq](https://console.groq.com/keys).
+2. Copie `.env.example` para `.env` e defina `VITE_GROQ_API_KEY` com sua chave. O arquivo `.env` é ignorado pelo Git.
+3. Opcionalmente, ajuste `VITE_GROQ_MODEL`. O padrão é `openai/gpt-oss-120b`; use um modelo disponível para sua conta.
+4. Instale as dependências e inicie o servidor de desenvolvimento:
 
-**Limitação importante:** este app estático chama a Groq diretamente do navegador. Não há rate limit por IP controlado pelo app e não é possível esconder a chave de quem acessar o site. A Groq ainda aplica suas próprias cotas/limites à chave, e a interface exibe o tempo de espera quando a resposta informa um limite; isso não substitui proteção de backend. Use uma chave dedicada, com limites de gasto/uso quando disponíveis, monitore-a e revogue-a se for exposta. Não use esta configuração para uma chave com acesso sensível.
+```bash
+npm install
+npm run dev
+```
 
-Se a chave já foi incluída em um build publicado, revogue-a e gere outra. Se o modelo não existir ou a conta não tiver acesso, confira o ID de `VITE_GROQ_MODEL`, depois reinicie o Vite e gere um novo deploy.
+O Vite carrega as variáveis de ambiente ao iniciar. Reinicie o servidor depois de alterar o `.env`.
 
----
+## Scripts
 
-## 👤 Desenvolvedor
+| Comando           | Descrição                                       |
+| ----------------- | ----------------------------------------------- |
+| `npm run dev`     | Inicia o servidor local de desenvolvimento.     |
+| `npm run lint`    | Verifica o código com ESLint.                   |
+| `npm run build`   | Gera a versão de produção na pasta `dist/`.     |
+| `npm run preview` | Serve localmente a build de produção.           |
+| `npm run deploy`  | Gera a build e publica `dist/` no GitHub Pages. |
 
-- **Mateus Henrique** — [GitHub](https://github.com/Mateus-henrique17) / [LinkedIn](https://www.linkedin.com/in/mateus-henrique-83b164375)
+## Build e segurança da chave
+
+O Vite **não copia o arquivo `.env` para `dist/`**. Porém, variáveis com prefixo `VITE_` usadas pelo código são substituídas durante a build e ficam visíveis nos arquivos JavaScript públicos. Portanto, a chave `VITE_GROQ_API_KEY` não pode ser mantida secreta em uma aplicação estática publicada no GitHub Pages.
+
+Para testar localmente, use uma chave dedicada, monitore os limites disponíveis na Groq e revogue-a se houver exposição. Não use uma chave com acesso sensível. Para proteger a chave em produção, é necessário mover as chamadas à Groq para um backend ou função serverless e manter o segredo somente no servidor. Se uma chave já foi incluída em uma build publicada, revogue-a e gere outra.
+
+## Publicação no GitHub Pages
+
+Configure `VITE_GROQ_API_KEY` no ambiente que executa a publicação antes de chamar `npm run deploy`. O script executa a build e envia o conteúdo de `dist/` para a branch `gh-pages`; confirme também que o GitHub Pages do repositório está configurado para publicar essa branch.
+
+Se a API retornar erro de autenticação, confira a chave. Se o modelo não estiver disponível, ajuste `VITE_GROQ_MODEL` e faça uma nova build/publicação. A Groq aplica limites próprios; a espera exibida pelo jogo ajuda a lidar com respostas de limite, mas não substitui um backend com controle de uso.
+
+## Autor
+
+**Mateus Henrique** — [GitHub](https://github.com/Mateus-henrique17) · [LinkedIn](https://www.linkedin.com/in/mateus-henrique-83b164375)
